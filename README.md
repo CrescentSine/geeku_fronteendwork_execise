@@ -1,1 +1,3 @@
-# geeku_fronteendwork_execise
+# 极客时间 前端实战训练营 随堂练习
+
+* **float2base64** 转换浮点数为64进制表示
