@@ -3,15 +3,36 @@ const usingChars = "0123456789" +
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
     "/+";
 
+/**
+ * @type {Record<string,number>}
+ */
+const charsValue = {}
+for (let i = 0; i < usingChars.length; ++i) {
+    charsValue[usingChars.charAt(i)] = i;
+}
+
 const Base = usingChars.length;
 const BaseReciprocal = 1 / Base;
 const MaxFraction = 9
+
+const SpecialValues = new Map([
+    [Number.NaN, "NaNNaNNaN"],
+    [Number.POSITIVE_INFINITY, "+Infinity"],
+    [Number.NEGATIVE_INFINITY, "/Infinity"],
+]);
+
+const SpecialResult = new Map(
+    [...SpecialValues].map(([n, r]) => [r, n])
+);
 
 /**
  * float number -> base64string
  * @param {number} float_num 
  */
 function encode(float_num) {
+    if (SpecialValues.has(float_num)) {
+        return SpecialValues.get(float_num);
+    }
     // 第一步，取符号位（1表示正数），把输入变为正数
     let sign = 1
     if (float_num < 0) {
@@ -61,6 +82,46 @@ function encode(float_num) {
     return result;
 }
 
+/**
+ * base64string -> float number
+ * @param {string} base64_value 
+ */
+function decode(base64_value) {
+    if (SpecialResult.has(base64_value)) {
+        return SpecialResult.get(base64_value);
+    }
+    let base = base64_value.substring(0, MaxFraction);
+    let expAndSign = base64_value.substring(MaxFraction);
+
+    let result = 0;
+    for (let i = MaxFraction; i; --i) {
+        let symbol = base.charAt(i - 1);
+        let digit = charsValue[symbol];
+        if (digit === void 0) return Number.NaN;
+        result = (result + digit) / Base;
+    }
+
+    let exp = 0;
+    for (let i = 0; i < expAndSign.length; ++i) {
+        let symbol = expAndSign.charAt(i);
+        let digit = charsValue[symbol];
+        if (digit === void 0) return Number.NaN;
+        exp = exp * Base + digit;
+    }
+    let expSign = exp & 1;
+    exp >>= 1;
+    let sign = exp & 1;
+    exp >>= 1;
+    if (expSign == 0) {
+        exp = -exp;
+    }
+    if (sign == 0) {
+        result = -result;
+    }
+    return result * (Base ** exp);
+}
+
 module.exports = {
     encode,
+    decode,
 }

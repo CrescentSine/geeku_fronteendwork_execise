@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-let { encode } = require("./src/convert");
+let { encode, decode } = require("./src/convert");
 
 /** @type {string[]} */
 let args = process.argv.slice(2);
@@ -10,6 +10,7 @@ switch (args[0]) {
         console.log(encode(eval(args[1])));
         break;
     case "decode":
+        console.log(decode(args[1]));
         break;
     default:
         console.log(`
