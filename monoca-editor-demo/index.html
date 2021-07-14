@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite App</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0px;
+      padding: 0px;
+    }
+
+    div.page {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page div.menuBar {
+      width: 100%;
+      height: min-content;
+    }
+
+    .menuBar input.btn {
+      display: inline;
+    }
+
+    .page div.editor {
+      width: 100%;
+      flex: 1;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="menuBar">
+      <input class="btn" type="button" id="selectFile" value="打开文件" />
+      <input class="btn" type="button" id="saveFile" value="保存文件" />
+    </div>
+    <div class="editor" id="editor-container"></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
