@@ -2,7 +2,7 @@
     "name": "float2base64",
     "version": "0.1.0",
     "main": "main.js",
-    "license": "CC0",
+    "license": "CC0-1.0",
     "repository": "https://github.com/CrescentSine/geeku_fronteendwork_execise.git",
     "author": "CrescentSine"
 }
