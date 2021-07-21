@@ -15,14 +15,14 @@ export default class Engine {
         const rePaired = /<(\w+)\s*([^>]*)>([^<]*)<\/\1>/gm; //匹配配对的标签
         const reClosed = /<(\w+)\s*([^(/>)]*)\/>/gm; //匹配自闭合标签
         template = template.replace(/\n/gm, "");
-        let createOnMatch = (_, tag, attr, content = "") =>
-            this.createNodeOnMatch(tag, attr, content);
 
         while (rePaired.test(template) || reClosed.test(template)) {
             //配对标签生成节点
-            template = template.replace(rePaired, createOnMatch);
+            template = template.replace(rePaired, (_, tag, attr, content) =>
+                this.createNodeOnMatch(tag, attr, content));
             //自闭合标签生成节点
-            template = template.replace(reClosed, createOnMatch);
+            template = template.replace(reClosed, (_, tag, attr) =>
+                this.createNodeOnMatch(tag, attr, ""));
         }
         console.log("第一阶段|解析创建node>>>", this.nodes);
         let rootNode = this.parseToNode(template);
@@ -35,7 +35,7 @@ export default class Engine {
     parseAttribute(attrStr) {
         let attrMap = new Map();
         attrStr = attrStr.trim();
-        attrStr.replace(/(\w+)\s*=['"](.*?)['"]/gm, (matched, key, value) => {
+        attrStr.replace(/([\w-]+)\s*=['"](.*?)['"]/gm, (matched, key, value) => {
             attrMap.set(key, value);
             return matched;
         });
@@ -80,7 +80,8 @@ export default class Engine {
         let ele = this.createElement(node, html);
         this.scopeAtrrParse(ele, node, globalScope, curentScope);
         pdom.appendChild(ele);
-        return node.children.map(item => [item, ele, curentScope]);
+        // 一个子节点应该按定义顺序处理，所以应该反着入栈
+        return node.children.map(item => [item, ele, curentScope]).reverse();
     }
 
     parseNodeToDom(root, data) {
@@ -89,8 +90,8 @@ export default class Engine {
         //转成成node节点
         while (stack.length > 0) {
             let [node, pdom, scope] = stack.pop();
-            if (node.attr.has("for")) {
-                let forExpr = node.attr.get("for")
+            if (node.attr.has("v-for")) {
+                let forExpr = node.attr.get("v-for")
                 let newAppend = this.appendForListNodesToDom(node, pdom, forExpr, data, scope);
                 stack = stack.concat(newAppend);
             }
@@ -104,11 +105,8 @@ export default class Engine {
 
     getValueInScope(globalScope, curentScope, propPath) {
         let props = propPath.split(".");
-        let val = curentScope[props[0]] || globalScope[props[0]];
-        props.slice(1).forEach((field) => {
-            val = val[field];
-        });
-        return val;
+        let matchIn = props[0] in curentScope ? curentScope : globalScope
+        return props.reduce((obj, field) => obj[field], matchIn);
     }
 
     scopehtmlParse(node, globalScope, curentScope) {
@@ -117,7 +115,7 @@ export default class Engine {
     }
 
     createElement(node, html) {
-        let ignoreAttr = ["for", "click"];
+        let ignoreAttr = ["v-for", "click"];
         let dom = document.createElement(node.tag);
         for (let [key, val] of node.attr) {
             if (!ignoreAttr.includes(key)) {
