@@ -75,6 +75,10 @@ export default class Engine {
         return stack;
     }
 
+    checkIfNodeAvailable(ifExpr, globalScope, curentScope) {
+        return !!this.getValueInScope(globalScope, curentScope, ifExpr);
+    }
+
     appendNodeToDom(node, pdom, globalScope, curentScope) {
         let html = this.scopehtmlParse(node, globalScope, curentScope);
         let ele = this.createElement(node, html);
@@ -90,6 +94,12 @@ export default class Engine {
         //转成成node节点
         while (stack.length > 0) {
             let [node, pdom, scope] = stack.pop();
+            if (node.attr.has("v-if")) {
+                let ifExpr = node.attr.get("v-if")
+                if (!this.checkIfNodeAvailable(ifExpr, data, scope)) {
+                    continue;
+                }
+            } 
             if (node.attr.has("v-for")) {
                 let forExpr = node.attr.get("v-for")
                 let newAppend = this.appendForListNodesToDom(node, pdom, forExpr, data, scope);
@@ -115,7 +125,7 @@ export default class Engine {
     }
 
     createElement(node, html) {
-        let ignoreAttr = ["v-for", "click"];
+        let ignoreAttr = ["v-for", "v-if", "click"];
         let dom = document.createElement(node.tag);
         for (let [key, val] of node.attr) {
             if (!ignoreAttr.includes(key)) {
