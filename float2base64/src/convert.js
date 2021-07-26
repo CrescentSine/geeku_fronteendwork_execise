@@ -13,7 +13,7 @@ for (let i = 0; i < usingChars.length; ++i) {
 
 const Base = usingChars.length;
 const BaseReciprocal = 1 / Base;
-const MaxFraction = 9
+const MaxFraction = 10
 
 const SpecialValues = new Map([
     [Number.NaN, "NaNNaNNaN"],
@@ -40,7 +40,7 @@ function encode(float_num) {
         float_num = -float_num;
     }
     // 第二部，把第一步结果变成区间(1,1/64]内的数，记录64位小数点偏移量
-    let exp = 0
+    let exp = -1
     if (float_num > 0) {
         // 大于等于1，一直除下去
         while (float_num >= 1) {
@@ -118,7 +118,7 @@ function decode(base64_value) {
     if (sign == 0) {
         result = -result;
     }
-    return result * (Base ** exp);
+    return result * (Base ** (exp+1));
 }
 
 module.exports = {
