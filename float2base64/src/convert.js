@@ -16,9 +16,9 @@ const BaseReciprocal = 1 / Base;
 const MaxFraction = 10
 
 const SpecialValues = new Map([
-    [Number.NaN, "NaNNaNNaN"],
+    [Number.NaN, "NaN"],
     [Number.POSITIVE_INFINITY, "+Infinity"],
-    [Number.NEGATIVE_INFINITY, "/Infinity"],
+    [Number.NEGATIVE_INFINITY, "-Infinity"],
 ]);
 
 const SpecialResult = new Map(
@@ -40,7 +40,7 @@ function encode(float_num) {
         float_num = -float_num;
     }
     // 第二部，把第一步结果变成区间(1,1/64]内的数，记录64位小数点偏移量
-    let exp = -1
+    let exp = -1 //区间(1,1/64]自带一位偏移量
     if (float_num > 0) {
         // 大于等于1，一直除下去
         while (float_num >= 1) {
@@ -53,34 +53,47 @@ function encode(float_num) {
             exp -= 1;
         }
     }
+    else {
+        exp = 0;
+    }
     // 第三步，把第二部结果一直乘以64，得到每一位的值，最多取9位，尾数与过小的数舍去
     // 取出64进制每一位后，按大端序存储
     let result = ""
     for (let len = 0; float_num > Number.EPSILON && len < MaxFraction; ++len) {
         float_num *= Base;
         let digit = Math.floor(float_num);
-        float_num -= digit
-        result += usingChars.charAt(digit)
-    }
-    // 第四步，如果没取到9位，补全9位
-    result = result.padEnd(MaxFraction, usingChars.charAt(0));
-    // 第五步，将符号位与指数的符号位与指数值一起存储至最低两位
-    // 指数符号位，1表示指数为正
-    let expSign = 1;
-    if (exp < 0) {
-        expSign = 0;
-        exp = -exp;
-    }
-    exp = (exp << 1) + sign;
-    exp = (exp << 1) + expSign;
-    // 第六步，将指数值与两个符号位合并的整数转为64进制，按小端序接到第四步的结果后面
-    while (exp > 0) {
-        let digit = exp % Base;
-        exp = (exp - digit) / Base;
+        float_num -= digit;
         result += usingChars.charAt(digit);
     }
-    return result;
+    // 第四步，表示出科学计数法有效数字部分
+    if (result.length == 0) {
+        result = "0";
+    }
+    if (result.length > 1) {
+        result = result.slice(0, 1) + "." + result.slice(1);
+    }
+    if (sign == 0) {
+        result = "-" + result;
+    }
+    result += "(64)";
+    if (exp != 0) {
+        result += "*10(64)^"
+        // 第五步，取指数符号位
+        if (exp < 0) {
+            exp = -exp;
+            result += "-"
+        }
+        // 第六步，将指数值转为64进制，按小端序接到第四步的结果后面
+        while (exp > 0) {
+            let digit = exp % Base;
+            exp = (exp - digit) / Base;
+            result += usingChars.charAt(digit);
+        }
+    }
+    return result + "(64)";
 }
+
+const match64NumStr = /^([\+\-]?)([0-9a-zA-Z\/\+])(?:\.([0-9a-zA-Z\/\+]+))?\(64\)(?:\*10\(64\)\^([\+\-]?)([0-9a-zA-Z\/\+]+)\(64\))?$/;
 
 /**
  * base64string -> float number
@@ -90,35 +103,41 @@ function decode(base64_value) {
     if (SpecialResult.has(base64_value)) {
         return SpecialResult.get(base64_value);
     }
-    let base = base64_value.substring(0, MaxFraction);
-    let expAndSign = base64_value.substring(MaxFraction);
 
-    let result = 0;
-    for (let i = MaxFraction; i; --i) {
-        let symbol = base.charAt(i - 1);
-        let digit = charsValue[symbol];
-        if (digit === void 0) return Number.NaN;
-        result = (result + digit) / Base;
+    let matched = base64_value.match(match64NumStr);
+    if (!matched) {
+        return Number.NaN;
+    }
+
+    let [, sign, single, tail, expSign, expStr] = matched;
+
+    let result = charsValue[single];
+    if (result === void 0) return Number.NaN;
+    if (tail) {
+        let frac = BaseReciprocal;
+        for (let symbol of tail) {
+            let digit = charsValue[symbol];
+            if (digit === void 0) return Number.NaN;
+            result = result + digit * frac;
+            frac *= BaseReciprocal;
+        }
+    }
+    if (sign == "-") {
+        result *= -1;
     }
 
     let exp = 0;
-    for (let i = 0; i < expAndSign.length; ++i) {
-        let symbol = expAndSign.charAt(i);
-        let digit = charsValue[symbol];
-        if (digit === void 0) return Number.NaN;
-        exp = exp * Base + digit;
+    if (expStr) {
+        for (let symbol of expStr) {
+            let digit = charsValue[symbol];
+            if (digit === void 0) return Number.NaN;
+            exp = exp * Base + digit;
+        }
+        if (expSign == "-") {
+            exp *= -1;
+        }
     }
-    let expSign = exp & 1;
-    exp >>= 1;
-    let sign = exp & 1;
-    exp >>= 1;
-    if (expSign == 0) {
-        exp = -exp;
-    }
-    if (sign == 0) {
-        result = -result;
-    }
-    return result * (Base ** (exp+1));
+    return result * (Base ** exp);
 }
 
 module.exports = {
