@@ -89,11 +89,12 @@ function encode(float_num) {
             exp = (exp - digit) / Base;
             result += usingChars.charAt(digit);
         }
+        result += "(64)";
     }
-    return result + "(64)";
+    return result;
 }
 
-const match64NumStr = /^([\+\-]?)([0-9a-zA-Z\/\+])(?:\.([0-9a-zA-Z\/\+]+))?\(64\)(?:\*10\(64\)\^([\+\-]?)([0-9a-zA-Z\/\+]+)\(64\))?$/;
+const match64NumStr = /^([\+\-]?)([0-9a-zA-Z\/\+]+)(?:\.([0-9a-zA-Z\/\+]+))?\(64\)(?:\*10\(64\)\^([\+\-]?)([0-9a-zA-Z\/\+]+)\(64\))?$/;
 
 /**
  * base64string -> float number
@@ -109,10 +110,14 @@ function decode(base64_value) {
         return Number.NaN;
     }
 
-    let [, sign, single, tail, expSign, expStr] = matched;
+    let [, sign, integer, tail, expSign, expStr] = matched;
 
-    let result = charsValue[single];
-    if (result === void 0) return Number.NaN;
+    let result = 0;
+    for (let symbol of integer) {
+        let digit = charsValue[symbol];
+        if (digit === void 0) return Number.NaN;
+        result = result * Base + digit;
+    }
     if (tail) {
         let frac = BaseReciprocal;
         for (let symbol of tail) {
