@@ -1,9 +1,10 @@
 
 import { editor } from "monaco-editor"
+import { createApp } from 'vue'
 
 const editorElement = document.getElementById("editor-container");
 const webEditor = editor.create(editorElement, {
-    language: "javascript",
+    language: "html",
 
 });
 
@@ -13,9 +14,9 @@ async function OpenFile() {
             multiple: false,
             types: [
                 {
-                    description: 'JavaScript脚本文件',
+                    description: 'Vue单文件组件',
                     accept: {
-                        'application/javascript': '.js',
+                        'text/vue-sfc': '.vue',
                     },
                 },
             ],
@@ -50,9 +51,9 @@ async function SaveFile() {
             multiple: false,
             types: [
                 {
-                    description: 'JavaScript脚本文件',
+                    description: 'Vue单文件组件',
                     accept: {
-                        'application/javascript': '.js',
+                        'text/vue-sfc': '.vue',
                     },
                 },
             ],
@@ -69,8 +70,8 @@ async function SaveFile() {
             }
 
             const writeSteam = await selected.createWritable();
-            let codeTests = webEditor.getValue();
-            await writeSteam.write(codeTests);
+            let codeTexts = webEditor.getValue();
+            await writeSteam.write(codeTexts);
             await writeSteam.close();
         }
     }
@@ -80,6 +81,30 @@ async function SaveFile() {
     }
 }
 
+async function previewSFC(filename) {
+    let component = await import(`./${filename}.vue`);
+    createApp(component.default).currentComponent.mount("#preview-root");
+}
+
+async function previewFile() {
+    let codeTexts = webEditor.getValue();
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                let resp = xhr.response;
+                previewSFC(resp);
+            }
+            else {
+                alert("预览失败");
+            }
+        }
+    };
+    xhr.open("POST", "/api/preview", true);
+    xhr.setRequestHeader("Content-Type", "text/vue-sfc");
+    xhr.send(codeTexts);
+}
+
 const allInputs = document.getElementsByTagName("input");
 
 const btnOpenFile = allInputs.namedItem("selectFile");
@@ -87,3 +112,6 @@ btnOpenFile.addEventListener("click", OpenFile);
 
 const btnSaveFile = allInputs.namedItem("saveFile");
 btnSaveFile.addEventListener("click", SaveFile);
+
+const btnPreviewFile = allInputs.namedItem("previewFile");
+btnPreviewFile.addEventListener("click", previewFile);
