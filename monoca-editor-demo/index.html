@@ -30,10 +30,16 @@
       display: inline;
     }
 
-    .page div.editor {
+    .page div.content {
       width: 100%;
       flex: 1;
       overflow: hidden;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .page .content div.editor {
+      flex: 1;
     }
   </style>
 </head>
@@ -43,10 +49,14 @@
     <div class="menuBar">
       <input class="btn" type="button" id="selectFile" value="打开文件" />
       <input class="btn" type="button" id="saveFile" value="保存文件" />
+      <input class="btn" type="button" id="previewFile" value="预览文件" />
     </div>
-    <div class="editor" id="editor-container"></div>
+    <div class="content">
+      <div class="editor" id="editor-container"></div>
+      <div class="editor" id="preview-root"></div>
+    </div>
   </div>
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/html-main.js"></script>
 </body>
 
 </html>
