@@ -4,3 +4,4 @@
 * **monoca-editor-demo** 加载vue文件使用MonocaEditor编辑，预览效果，然后保存磁盘
 * **k-th-number** 查找数组中第k大的元素。使用每一轮划分后只执行一半的快排算法，复杂度O(n)
 * **fish-templete** 解析模板字符串和数据模型，生成dom
+* **qiankun-reader** 使用qiankun微前端框架创建的新闻阅读页面
