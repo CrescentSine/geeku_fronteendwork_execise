@@ -1,7 +1,7 @@
 <template>
   <div class="newslist">
     <div class="news-item" v-for="(item, index) in newslist" :key="index">
-      <div class="img"><img src="{{item.image}}" /></div>
+      <div class="img"><img :src="item.image" /></div>
       <div class="title">{{ item.title }}</div>
     </div>
   </div>
