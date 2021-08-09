@@ -1,6 +1,6 @@
 <template>
   <div class="newslist">
-    <div class="news-item" v-for="(item, index) in newslist" :key="index">
+    <div class="news-item" v-for="(item, index) in newslist" :key="index" @click="this.$emit('onClick', index)">
       <div class="img"><img :src="item.image" /></div>
       <div class="title">{{ item.title }}</div>
     </div>
@@ -16,13 +16,17 @@ export default {
       required: true,
     },
   },
+  emits: {
+    onClick (i: number) {
+      return Number.isInteger(i) && i >= 0;
+    }
+  }
 };
 </script>
 
 <style lang="less">
 .news-item {
   display: flex;
-  width: 600px;
   height: 100px;
   justify-content: space-between;
 }

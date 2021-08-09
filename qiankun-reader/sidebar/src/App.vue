@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NewsList :newslist="newslist"></NewsList>
+    <NewsList :newslist="newslist" @onClick="open"></NewsList>
   </div>
 </template>
 
@@ -32,7 +32,12 @@ export default {
         newslist.value = jsondata.result
         console.log(jsondata.result)
       });
-    return { newslist };
+    
+    function open(i: number) {
+      console.log(i);
+    }
+
+    return { newslist, open };
   },
 };
 </script>
