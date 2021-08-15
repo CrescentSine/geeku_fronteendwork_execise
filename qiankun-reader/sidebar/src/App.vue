@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NewsList :newslist="newslist" @onClick="open"></NewsList>
+    <NewsList :newslist="newslist" @gotoNews="open"></NewsList>
   </div>
 </template>
 
@@ -33,8 +33,8 @@ export default {
         console.log(jsondata.result)
       });
     
-    function open(i: number) {
-      console.log(i);
+    function open(url: string) {
+      console.log(url);
     }
 
     return { newslist, open };
